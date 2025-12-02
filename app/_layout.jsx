@@ -1,47 +1,39 @@
 // app/_layout.js
-import { Stack, router } from "expo-router";
+import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import AppSplashScreen from "./AppSplashScreen";
+import { useFonts } from 'expo-font';
+import { Cookie_400Regular } from '@expo-google-fonts/cookie';
+import { Lato_400Regular, Lato_700Bold } from '@expo-google-fonts/lato';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-    const [isSplashVisible, setIsSplashVisible] = useState(true);
-    const [hasLaunched, setHasLaunched] = useState(null);
+    const [fontsLoaded] = useFonts({
+        Cookie_400Regular,
+        Lato_400Regular,
+        Lato_700Bold,
+    });
 
     useEffect(() => {
-        const checkFirstLaunch = async () => {
-            const alreadyLaunched = await AsyncStorage.getItem("hasLaunched");
-            setHasLaunched(alreadyLaunched !== null);
-        };
-        checkFirstLaunch();
-    }, []);
+        if (fontsLoaded) {
+            SplashScreen.hideAsync();
+        }
+    }, [fontsLoaded]);
 
-    useEffect(() => {
-        if (hasLaunched === null) return;
-
-        const timer = setTimeout(() => {
-            setIsSplashVisible(false);
-
-            if (hasLaunched) {
-                router.replace("/HomeScreen");
-            } else {
-                router.replace("/OnboardingScreen");
-            }
-        }, 2000);
-
-        return () => clearTimeout(timer);
-    }, [hasLaunched]);
-
-    if (isSplashVisible) {
-        return <AppSplashScreen />;
+    if (!fontsLoaded) {
+        return null;
     }
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
             <SafeAreaProvider>
-                <Stack screenOptions={{ headerShown: false }} />
+                <Stack initialRouteName="index">
+                    <Stack.Screen name="index" options={{ headerShown: false }} />
+                    <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                </Stack>
             </SafeAreaProvider>
         </GestureHandlerRootView>
     );
