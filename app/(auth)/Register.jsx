@@ -1,5 +1,7 @@
 import React from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, useWindowDimensions } from 'react-native';
+import Animated, { useAnimatedStyle, withTiming, useSharedValue, withRepeat, withSequence, withDelay, Easing, useDerivedValue } from 'react-native-reanimated';
+import { Canvas, Rect, LinearGradient, vec } from '@shopify/react-native-skia';
 import { router } from 'expo-router';
 import { GradientButton } from '../../components/common/GradientButton';
 import { FONTS } from '../../constants';
@@ -72,6 +74,33 @@ const Register = () => {
     };
 
     const { title, subtitle, progress } = getStepContent();
+    const { width: screenWidth } = useWindowDimensions();
+
+    const animatedProgressStyle = useAnimatedStyle(() => {
+        return {
+            width: withTiming(`${progress * 100}%`, { duration: 500 }),
+        };
+    });
+
+    const shimmerProgress = useSharedValue(0);
+
+    React.useEffect(() => {
+        shimmerProgress.value = withRepeat(
+            withSequence(
+                withTiming(1, { duration: 2000, easing: Easing.linear }),
+                withTiming(0, { duration: 0 }),
+                withDelay(1000, withTiming(0, { duration: 0 }))
+            ),
+            -1,
+            false
+        );
+    }, []);
+
+    const gradientTransform = useDerivedValue(() => {
+        // Sweep across the screen width
+        const w = screenWidth;
+        return [{ translateX: -w + (shimmerProgress.value * 2.5 * w) }];
+    });
 
     return (
         <View style={styles.container}>
@@ -81,7 +110,19 @@ const Register = () => {
             >
                 <View style={styles.content}>
                     <View style={styles.progressContainer}>
-                        <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+                        <Animated.View style={[styles.progressBar, animatedProgressStyle]}>
+                            <Canvas style={{ flex: 1 }}>
+                                <Rect x={0} y={0} width={screenWidth} height={4}>
+                                    <LinearGradient
+                                        start={vec(0, 0)}
+                                        end={vec(screenWidth, 0)}
+                                        colors={[colors.primary, colors.secondary, colors.primary]}
+                                        positions={[0, 0.5, 1]}
+                                        transform={gradientTransform}
+                                    />
+                                </Rect>
+                            </Canvas>
+                        </Animated.View>
                     </View>
 
                     <View style={styles.header}>
@@ -199,8 +240,8 @@ const styles = StyleSheet.create({
     },
     progressBar: {
         height: '100%',
-        backgroundColor: colors.primary,
         borderRadius: 2,
+        overflow: 'hidden',
     },
     title: {
         fontFamily: FONTS.bold,
