@@ -4,6 +4,7 @@ import { Canvas, Rect, RadialGradient, vec } from '@shopify/react-native-skia';
 import { Sun } from './orbit/Sun';
 import { OrbitRing } from './orbit/OrbitRing';
 import Animated from 'react-native-reanimated';
+import { GridBackground } from './common/GridBackground';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -13,29 +14,8 @@ export const OrbitAnimation = ({
 }) => {
   return (
     <View style={[styles.container, style]}>
-      {/* Background grid image */}
-      <Animated.Image
-        source={require('../assets/icons/tile-grid-png-6.png')}
-        style={styles.gridImage}
-        resizeMode="cover"
-      />
-
-      {/* Skia radial gradient overlay - fades from center outwards */}
-      <Canvas style={styles.gradientCanvas}>
-        <Rect x={0} y={0} width={400} height={400}>
-          <RadialGradient
-            c={vec(200, 200)}
-            r={200}
-            colors={[
-              'rgba(250, 251, 245, 0)',
-              'rgba(250, 251, 245, 0.3)',
-              'rgba(250, 251, 245, 0.7)',
-              'rgba(250, 251, 245, 1)',
-            ]}
-            positions={[0, 0.4, 0.7, 1]}
-          />
-        </Rect>
-      </Canvas>
+      {/* Background grid */}
+      <GridBackground />
 
       {/* Sun */}
       <Sun />
